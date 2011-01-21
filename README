@@ -1,0 +1,84 @@
+=======================================================================
+ DESCRIPTION
+=======================================================================
+This library allows you to handle uri easility ( just for HTTP )
+
+=======================================================================
+ DEPENDENCIES
+=======================================================================
+<boost/foreach.hpp>
+<boost/lexical_cast.hpp>
+<boost/format.hpp>
+<boost/utility.hpp>
+<boost/algorithm/string.hpp>
+
+=======================================================================
+ SYNOPSIS
+=======================================================================
+#include <string>
+#include <urilite.h>
+
+using namespace urilite;
+
+// RFC3986 style percent encoding
+std::string encoded = uri::encode("val ue");
+std::string decoded = uri::decode(encoded);
+
+// RFC2396 style, same as JavaScript's encodeURIComponent
+std::string encoded2 = uri::encodeURIComponent(string);
+std::string decoded2 = uri::decode(encoded2);
+
+// These encoding methods encode each of whitespaces to '%20' according to
+// percent encoding spec.
+// If you want to encode ' ' to '+', you use 'encode2' or 'encodeURICompoent2'
+// instead. And you can use 'decode2' decoding method for that purpose.
+
+uri u = uri::parse("http://example.org/path?q1=v1&q2=v2#frag");
+std::string scheme  = u.scheme();
+std::string host    = u.host();
+std::string path    = u.path();
+unsigned short port = u.port();
+
+std::string query_string = u.query_string();
+
+uri::query_params params = u.query();
+for(uri::query_params::const_iterator iter = params.begin();
+    iter != params.end();
+    ++iter) {
+    std::cout << iter->first  << std::endl;
+    std::cout << iter->second << std::endl;
+}
+
+BOOST_FOREACH(uri::query_param p, params) {
+    std::cout << p.first  << std::endl;
+    std::cout << p.second << std::endl;
+}
+
+u.append_query("new_key1", "new_value1");
+u.append_query("new_key2", "new_value2");
+
+std::string uri_string = u.str();
+
+std::ostringstream os;
+os << u;
+
+=======================================================================
+ INSTALL
+=======================================================================
+This is header-only library.
+So, copying urilite.h into your project directory is the easiest way.
+
+or
+
+1. cd build
+2. cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release
+
+parameters
+    - BUILD_SHARED_LIBS (ON|OFF)
+    - CMAKE_BUILD_TYPE (Debug|Release)
+    - CMAKE_INSTALL_PREFIX (/usr/local)
+
+3. make
+4. make test
+5. make install
+

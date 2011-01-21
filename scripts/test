@@ -1,0 +1,93 @@
+#!/usr/bin/env perl
+
+eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}' if 0;
+
+use strict;
+use warnings;
+
+use FindBin;
+use File::Find;
+use Getopt::Long;
+use Pod::Usage;
+use IO::Dir;
+
+my $help    = 0;
+my $verbose = 0;
+
+my %opt = (
+    'help|?'     => \$help,
+    'verbose|v!' => \$verbose,
+);
+GetOptions(%opt);
+
+pod2usage(1) if $help;
+
+# build cmake command
+my $command = "cmake .. -DCMAKE_BUILD_TYPE=Debug";
+
+# check build directory
+my $build_dir = "$FindBin::Bin/../build";
+unless (-e $build_dir) {
+    mkdir($build_dir, 0755) or die $1;
+}
+chdir $build_dir or die $!;
+print $command, "\n";
+system($command);
+print "make\n";
+system("make");
+
+if ($verbose) {
+    my @tests = ();
+    my $tests_dir = IO::Dir->new('tests');
+    while (defined(my $filename = $tests_dir->read)) {
+        next if (-d $filename);
+        next if ($filename =~ /\.cmake$/);
+        next if ($filename eq 'Makefile');
+        push(@tests, $filename);
+    }
+    for my $test ( @tests ) {
+        my $test_command = sprintf("./tests/%s", $test);
+        print $test_command, "\n";
+        system(sprintf($test_command));
+    }
+} else {
+    print "make test\n";
+    system("make test");
+}
+
+1;
+__END__
+=head1 NAME
+
+test - This program helps your building and testing workaround.
+
+=head1 SYNOPSIS
+
+    test [options]
+
+Example:
+
+    ./scripts/test --verbose
+    ./scripts/test -v 
+
+Options:
+
+    -verbose (v) if this flag is on, print verbose results of google-tests. If not, the test results would be compressed.
+
+=head1 DESCRIPTION
+
+This helps your building and testing workaround.
+
+=head1 AUTHOR
+
+Lyo Kato, E<lt>lyo.kato@gmail.comE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2010 Lyo Kato. All rights reserved.
+
+This library is free software. You can redistribute it and/or modify it under
+the same terms as perl itself.
+
+=cut
+
