@@ -13,47 +13,95 @@ use IO::Dir;
 
 my $help    = 0;
 my $verbose = 0;
+my $reload  = 0;
 
 my %opt = (
     'help|?'     => \$help,
     'verbose|v!' => \$verbose,
+    'reload|r'   => \$reload,
 );
 GetOptions(%opt);
 
 pod2usage(1) if $help;
 
-# build cmake command
-my $command = "cmake .. -DCMAKE_BUILD_TYPE=Debug";
+sub do_build {
+    # build cmake command
+    my $command = "cmake .. -DCMAKE_BUILD_TYPE=Debug";
 
-# check build directory
-my $build_dir = "$FindBin::Bin/../build";
-unless (-e $build_dir) {
-    mkdir($build_dir, 0755) or die $1;
-}
-chdir $build_dir or die $!;
-print $command, "\n";
-system($command);
-print "make\n";
-system("make");
+    # check build directory
+    my $build_dir = "$FindBin::Bin/../build";
+    unless (-e $build_dir) {
+        mkdir($build_dir, 0755) or die $!;
+    }
+    chdir $build_dir or die $!;
+    print $command, "\n";
+    system($command);
+    print "make\n";
+    system("make");
 
-if ($verbose) {
-    my @tests = ();
-    my $tests_dir = IO::Dir->new('tests');
-    while (defined(my $filename = $tests_dir->read)) {
-        next if (-d $filename);
-        next if ($filename =~ /\.cmake$/);
-        next if ($filename eq 'Makefile');
-        push(@tests, $filename);
+    if ($verbose) {
+        my @tests = ();
+        my $tests_dir = IO::Dir->new('tests');
+        while (defined(my $filename = $tests_dir->read)) {
+            next if (-d $filename);
+            next if ($filename =~ /\.cmake$/);
+            next if ($filename eq 'Makefile');
+            push(@tests, $filename);
+        }
+        for my $test ( @tests ) {
+            my $test_command = sprintf("./tests/%s", $test);
+            print $test_command, "\n";
+            system(sprintf($test_command));
+        }
+    } else {
+        print "make test\n";
+        system("make test");
     }
-    for my $test ( @tests ) {
-        my $test_command = sprintf("./tests/%s", $test);
-        print $test_command, "\n";
-        system(sprintf($test_command));
-    }
-} else {
-    print "make test\n";
-    system("make test");
 }
+
+&do_build();
+exit unless $reload;
+
+my %FILES = ();
+&find_updated_files();
+
+print "1. Waiting for source changes... (press Ctrl+C to interrupt)\n";
+my $build_count = 1;
+
+while (1) {
+    sleep 1;
+    if (&find_updated_files()) {
+        print "found updated file\n";
+        print "start to build\n";
+        &do_build();
+        $build_count++;
+        print sprintf("%d. Waiting for source changes... (press Ctrl+C to interrupt)\n", $build_count);
+    }
+}
+
+sub find_updated_files {
+    my $found = 0;
+    for my $type (qw(include src tests)) {
+        my $dir = "$FindBin::Bin/../" . $type;
+        File::Find::find({ no_chdir => 1, wanted => sub {
+            my $filepath = $File::Find::name; 
+            return unless -f $filepath;
+            my $last_update = (stat($filepath))[9];
+
+            unless (exists $FILES{$filepath}) {
+                $found = 1;
+                $FILES{$filepath} = $last_update;
+            } else {
+                if ($FILES{$filepath} != $last_update) {
+                    $found = 1;
+                    $FILES{$filepath} = $last_update;
+                }
+            }
+        } }, $dir);
+    }
+    return $found;
+}
+
 
 1;
 __END__
@@ -68,11 +116,13 @@ test - This program helps your building and testing workaround.
 Example:
 
     ./scripts/test --verbose
-    ./scripts/test -v 
+    ./scripts/test --reload
+    ./scripts/test -v -r
 
 Options:
 
     -verbose (v) if this flag is on, print verbose results of google-tests. If not, the test results would be compressed.
+    -reload  (r) if this flag is on, automatically find updated files, and build them, repeatedly.
 
 =head1 DESCRIPTION
 
