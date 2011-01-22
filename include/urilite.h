@@ -363,6 +363,14 @@ class uri {
     return os.str();
   }
 
+  const std::string relstr() const {
+    std::ostringstream os;
+    os << path_;
+    if (!query_.empty())
+      os << "?" << this->query_string();
+    return os.str();
+  }
+
  private:
   uri(bool               secure, 
       const std::string& host, 

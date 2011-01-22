@@ -37,6 +37,7 @@ TEST(uriTest, testParseBasic)
   EXPECT_EQ("new_key=va%20l&qkey=qval", u.query_string());
   EXPECT_EQ("frag", u.fragment());
   EXPECT_EQ("http://www.example.org/path/path1?new_key=va%20l&qkey=qval#frag", u.str());
+  EXPECT_EQ("/path/path1?new_key=va%20l&qkey=qval", u.relstr());
 
   std::ostringstream os;
   os << u;
