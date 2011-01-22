@@ -83,7 +83,7 @@ class encoder : public boost::noncopyable {
 public:
     static std::string encode(const std::string& s) {
         std::ostringstream oss;
-        for (int i=0; i < s.size(); i++) {
+        for (int i=0; i < s.size(); ++i) {
             char c = s[i];
             if (!T::match(c)) {
                 oss << c;
@@ -98,7 +98,7 @@ public:
 
     static std::string decode(const std::string& s) {
         std::ostringstream oss;
-        for (int i = 0; i < s.size(); i++) {
+        for (int i = 0; i < s.size(); ++i) {
             char c = s[i];
             if (c == '+') {
                 oss << U::plus_decoded();
