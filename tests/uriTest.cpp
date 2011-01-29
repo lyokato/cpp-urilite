@@ -37,7 +37,7 @@ TEST(uriTest, testParseBasic)
   EXPECT_EQ("new_key=va%20l&qkey=qval", u.query_string());
   EXPECT_EQ("frag", u.fragment());
   EXPECT_EQ("http://www.example.org/path/path1?new_key=va%20l&qkey=qval#frag", u.str());
-  EXPECT_EQ("/path/path1?new_key=va%20l&qkey=qval", u.relstr());
+  EXPECT_EQ("/path/path1?new_key=va%20l&qkey=qval", u.relative());
 
   std::ostringstream os;
   os << u;
@@ -131,6 +131,7 @@ TEST(uriTest, testPort) {
   EXPECT_TRUE(u6.secure());
   EXPECT_EQ(8080, u6.port());
   EXPECT_EQ("https://www.example.org:8080/path/path1?qkey=qval#frag", u6.str());
+  EXPECT_EQ("www.example.org:8080", u6.authority());
 
   // invalid port ( including NaN )
   ASSERT_ANY_THROW( uri::parse("https://www.example.org:aa9/path/path1?qkey=qval#frag") );

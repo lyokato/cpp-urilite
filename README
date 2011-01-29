@@ -60,7 +60,7 @@ u.append_query("new_key2", "new_value2");
 std::string uri_string = u.str();
 // http://example.org/path?q1=v1&q2=v2#frag 
 
-std::string relative_string = u.relstr();
+std::string relative_string = u.relative();
 // /path?q1=v1&q2=v2  This is useful for first line of HTTP Request header
 
 std::ostringstream os;

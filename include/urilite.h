@@ -363,7 +363,17 @@ class uri {
     return os.str();
   }
 
-  const std::string relstr() const {
+  const std::string authority() const {
+    std::ostringstream os;
+    os << host_;
+    if (!
+         ((!secure_ && port_ ==  80)
+        ||( secure_ && port_ == 443)) )
+      os << ":" << port_;
+    return os.str();
+  }
+
+  const std::string relative() const {
     std::ostringstream os;
     os << path_;
     if (!query_.empty())
